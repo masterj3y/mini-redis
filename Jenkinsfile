@@ -2,10 +2,14 @@ pipeline {
     agent any
     stages {
         stage('test') {
-            sh 'cargo test'
+            steps {
+                sh 'cargo test'
+            }
         }
         stage('build') {
-            sh 'cargo build'
+            steps {
+                sh 'cargo build'
+            }
         }
     }
 }
