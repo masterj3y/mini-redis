@@ -1,5 +1,5 @@
 pipeline {
-    agent { label 'agent1' }
+    agent any
     environment {
         TEL_NOTIFIER_TOKEN = credentials("TEL_NOTIFIER_TOKEN")
     }
