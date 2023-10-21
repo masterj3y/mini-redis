@@ -6,14 +6,38 @@ pipeline {
     stages {
         stage('test') {
             steps {
-                sh 'RUST_LOG=debug ./notifier/telnotif -t $TEL_NOTIFIER_TOKEN -r 6488784421 -m "running tests"'
-                sh 'cargo test'
+                script {
+                    sh 'RUST_LOG=debug ./notifier/telnotif -t $TEL_NOTIFIER_TOKEN -r 6488784421 -m "running tests"'
+                    sh 'cargo test'
+                }
             }
         }
         stage('build') {
             steps {
-                sh 'RUST_LOG=debug ./notifier/telnotif -t $TEL_NOTIFIER_TOKEN -r 6488784421 -m "building project"'
-                sh 'cargo build'
+                script {
+                    sh 'RUST_LOG=debug ./notifier/telnotif -t $TEL_NOTIFIER_TOKEN -r 6488784421 -m "building project"'
+                    sh 'cargo build --release'
+                }
+            }
+        }
+        stage('build image') {
+            steps {
+                script {
+                    echo 'building image'
+                    withCredentials(
+                        [
+                            usernamePassword(
+                                credentialsId: 'nexus-docker', 
+                                usernameVariable: 'USER_NAME', 
+                                passwordVariable: 'PASSWORD'
+                            )
+                        ]
+                    ) {
+                        sh 'docker build -t localhost:8083/mini-redis:$BUILD_ID .'
+                        sh 'docker login -u $USER_NAME -p $PASSWORD http://localhost:8083'
+                        sh 'docker push'
+                    }
+                }
             }
         }
     }
