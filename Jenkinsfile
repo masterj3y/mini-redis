@@ -23,7 +23,6 @@ pipeline {
         stage('build image') {
             steps {
                 script {
-                    echo 'building image'
                     withCredentials(
                         [
                             usernamePassword(
@@ -33,8 +32,10 @@ pipeline {
                             )
                         ]
                     ) {
+                        sh 'RUST_LOG=debug ./notifier/telnotif -t $TEL_NOTIFIER_TOKEN -r 6488784421 -m "building image"'
                         sh 'docker build -t localhost:8083/mini-redis:$BUILD_ID .'
                         sh 'docker login -u $USER_NAME -p $PASSWORD http://localhost:8083'
+                        sh 'RUST_LOG=debug ./notifier/telnotif -t $TEL_NOTIFIER_TOKEN -r 6488784421 -m "pushing image"'
                         sh 'docker push'
                     }
                 }
