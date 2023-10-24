@@ -5,6 +5,11 @@ pipeline {
     }
     stages {
         stage('test') {
+            when {
+                expression {
+                    BRANCH_NAME == 'dev' || BRANCH_NAME == 'master'
+                }
+            }
             steps {
                 sh 'RUST_LOG=debug ./notifier/telnotif -t $TEL_NOTIFIER_TOKEN -r 6488784421 -m "running tests"'
                 sh 'cargo test'
@@ -17,6 +22,11 @@ pipeline {
             }
         }
         stage('build image') {
+            when {
+                expression {
+                    BRANCH_NAME == 'dev' || BRANCH_NAME == 'master'
+                }
+            }
             steps {
                 withCredentials(
                     [
