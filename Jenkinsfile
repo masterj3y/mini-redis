@@ -1,4 +1,4 @@
-def script
+def sc
 
 pipeline {
     agent { label 'rust-agent' }
@@ -9,7 +9,7 @@ pipeline {
         stage("init") {
             steps {
                 script {
-                    script = load "script.groovy"
+                    sc = load "script.groovy"
                 }
             }
         }
@@ -21,14 +21,14 @@ pipeline {
             }
             steps {
                 script {
-                    script.runTests()
+                    sc.runTests()
                 }
             }
         }
         stage('build') {
             steps {
                 script {
-                    script.buildProject()
+                    sc.buildProject()
                 }
             }
         }
@@ -47,7 +47,7 @@ pipeline {
                             passwordVariable: 'PASSWORD')
                         ]
                     ) {
-                        script.deploy()
+                        sc.deploy()
                     }
                 }
             }
@@ -56,17 +56,17 @@ pipeline {
     post {
         always {
             script {
-                script.logOutOfRepository()
+                sc.logOutOfRepository()
             }
         }
         success {
             script {
-                script.notif("Pipeline failed")
+                sc.notif("Pipeline failed")
             }
         }
         failure {
             script {
-                script.notif("Pipleine succeed")
+                sc.notif("Pipleine succeed")
             }
         }
     }
