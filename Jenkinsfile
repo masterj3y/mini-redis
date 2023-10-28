@@ -61,12 +61,12 @@ pipeline {
         }
         success {
             script {
-                sc.notif("Pipeline failed")
+                sc.notif("Pipeline succeed")
             }
         }
         failure {
             script {
-                sc.notif("Pipleine succeed")
+                sc.notif("Pipleine failed")
             }
         }
     }
