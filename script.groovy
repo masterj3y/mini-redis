@@ -1,10 +1,10 @@
 def runTests() {
-    gv.notif("Running tests")
+    notif("Running tests")
     sh 'cargo test'
 }
 
 def buildProject() {
-    gv.notif("Building project")
+    notif("Building project")
     sh 'cargo build --release'
 }
 
