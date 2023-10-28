@@ -21,8 +21,7 @@ pipeline {
             }
             steps {
                 script {
-                    gv.notify("running tests")
-                    sh 'cargo test'
+                    gv.buildProject()
                 }
             }
         }
