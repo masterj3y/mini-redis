@@ -1,4 +1,4 @@
-def gv
+def script
 
 pipeline {
     agent { label 'rust-agent' }
@@ -9,7 +9,7 @@ pipeline {
         stage("init") {
             steps {
                 script {
-                    gv = load "script.groovy"
+                    script = load "script.groovy"
                 }
             }
         }
@@ -21,14 +21,15 @@ pipeline {
             }
             steps {
                 script {
-                    gv.buildProject()
+                    script.runTests()
                 }
             }
         }
         stage('build') {
             steps {
-                sh 'RUST_LOG=debug ./notifier/telnotif -t $TEL_NOTIFIER_TOKEN -r 6488784421 -m "building project"'
-                sh 'cargo build --release'
+                script {
+                    script.buildProject()
+                }
             }
         }
         stage('build image') {
@@ -38,33 +39,35 @@ pipeline {
                 }
             }
             steps {
-                withCredentials(
-                    [
-                        usernamePassword(
+                script {
+                    withCredentials(
+                        [usernamePassword(
                             credentialsId: 'nexus-docker', 
                             usernameVariable: 'USER_NAME', 
-                            passwordVariable: 'PASSWORD'
-                        )
-                    ]
-                ) {
-                    sh 'RUST_LOG=debug ./notifier/telnotif -t $TEL_NOTIFIER_TOKEN -r 6488784421 -m "building image"'
-                    sh 'docker build -t localhost:8083/mini-redis:$BUILD_ID .'
-                    sh 'docker login -u $USER_NAME -p $PASSWORD http://localhost:8083'
-                    sh 'RUST_LOG=debug ./notifier/telnotif -t $TEL_NOTIFIER_TOKEN -r 6488784421 -m "pushing image"'
-                    sh 'docker push localhost:8083/mini-redis:$BUILD_ID'
+                            passwordVariable: 'PASSWORD')
+                        ]
+                    ) {
+                        script.deploy()
+                    }
                 }
             }
         }
     }
     post {
         always {
-            sh 'docker logout'
+            script {
+                script.logOutOfRepository()
+            }
         }
         success {
-            sh 'RUST_LOG=debug ./notifier/telnotif -t $TEL_NOTIFIER_TOKEN -r 6488784421 -m "build succeed"'
+            script {
+                script.notif("Pipeline failed")
+            }
         }
         failure {
-            sh 'RUST_LOG=debug ./notifier/telnotif -t $TEL_NOTIFIER_TOKEN -r 6488784421 -m "pipline failed"'
+            script {
+                script.notif("Pipleine succeed")
+            }
         }
     }
 }
