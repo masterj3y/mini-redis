@@ -16,7 +16,7 @@ pipeline {
         stage('test') {
             when {
                 expression {
-                    BRANCH_NAME == 'dev' || BRANCH_NAME == 'master'
+                    env.BRANCH_NAME == 'dev' || env.BRANCH_NAME == 'master'
                 }
             }
             steps {
@@ -35,7 +35,7 @@ pipeline {
         stage('build image') {
             when {
                 expression {
-                    BRANCH_NAME == 'dev' || BRANCH_NAME == 'master'
+                    env.BRANCH_NAME == 'dev' || env.BRANCH_NAME == 'master'
                 }
             }
             steps {
