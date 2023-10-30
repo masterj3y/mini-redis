@@ -1,18 +1,13 @@
-def sc
+@Library('shared-lib') _
 
 pipeline {
     agent { label 'rust-agent' }
     environment {
         TEL_NOTIFIER_TOKEN = credentials("TEL_NOTIFIER_TOKEN")
+        TEL_NOTIF_RECEIVER = credentials("TEL_NOTIF_RECEIVER")
+        IMAGE_NAME = "localhost:8083/mini-redis:$BUILD_ID"
     }
     stages {
-        stage("init") {
-            steps {
-                script {
-                    sc = load "script.groovy"
-                }
-            }
-        }
         stage('test') {
             when {
                 expression {
@@ -21,14 +16,14 @@ pipeline {
             }
             steps {
                 script {
-                    sc.runTests()
+                    runTests()
                 }
             }
         }
         stage('build') {
             steps {
                 script {
-                    sc.buildProject()
+                    buildApp()
                 }
             }
         }
@@ -40,14 +35,19 @@ pipeline {
             }
             steps {
                 script {
-                    withCredentials(
-                        [usernamePassword(
-                            credentialsId: 'nexus-docker', 
-                            usernameVariable: 'USER_NAME', 
-                            passwordVariable: 'PASSWORD')
-                        ]
-                    ) {
-                        sc.deploy()
+                    loginInDocker()
+                    buildDockerImage IMAGE_NAME
+                    pushDockerImage IMAGE_NAME
+                }
+            }
+        }
+        stage("run app") {
+            steps {
+                script {
+                    def dockerCmd = "docker run $IMAGE_NAME"
+                    notif("Runing App")
+                    sshagent("deployer-ssh-key") {
+                        sh "ssh -o StrictHostKeyChecking=no jenkins@172.17.02 -p 6235 $dockerCmd"
                     }
                 }
             }
@@ -56,17 +56,17 @@ pipeline {
     post {
         always {
             script {
-                sc.logOutOfRepository()
+                logOutDocker()
             }
         }
         success {
             script {
-                sc.notif("Pipeline succeed")
+                notif "Pipeline succeed"
             }
         }
         failure {
             script {
-                sc.notif("Pipleine failed")
+                notif "Pipleine failed"
             }
         }
     }
